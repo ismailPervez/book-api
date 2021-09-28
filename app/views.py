@@ -1,4 +1,5 @@
 # the routes and view functions
+from flask import json, request
 from app import api
 from flask_restful import Resource, reqparse
 from flask import jsonify
@@ -31,8 +32,10 @@ books = [
 ]
 
 class Book(Resource):
-    def get(self, book_id):
+    def get(self, book_id=None):
         # user must be logged in to see the books he/she has
+        if book_id is None:
+            return jsonify({'status': 'fail', 'message': 'book_id is required!'})
         return jsonify({"status": "ok", "data": books[book_id - 1]})
 
     def post(self):
@@ -42,6 +45,30 @@ class Book(Resource):
         args.id = bookId
         books.append(args)
         return jsonify({"status": "ok", "message": "data added"})
+
+    def put(self, book_id=None):
+        # the data should be sent through json format - same as post
+        if book_id is None:
+            return jsonify({'status': 'fail', 'message': 'book_id is required!'})
+
+        if request.json is None:
+            return jsonify({"status": 'fail', "message": 'no json data found!'})
+
+        # else
+        # find the book
+        book  = books[book_id - 1] # because counting starts at 0
+        print(book)
+        if "title" in request.json:
+            book['title'] = request.json["title"]
+        
+        if "desc" in request.json:
+            book['desc'] = request.json["desc"]
+
+        if "ratings" in request.json:
+            book['ratings'] = request.json["ratings"]
+
+        return jsonify({"status": 'ok', 'message': 'book updated successfully!'})
+
 
 
 api.add_resource(Book, '/book', '/book/<int:book_id>')
